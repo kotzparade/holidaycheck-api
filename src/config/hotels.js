@@ -1,17 +1,23 @@
 export const hotels = [
   {
     id: "291dac76-4fe2-3336-9c5d-709261abf797",
-    name: "Reviews", // Used for table naming
+    name: "Reischlhof", // Used for table naming
     partnerId: "1798",
-    tableId: "Reviews", // Each hotel gets its own table
+    tableId: "Reischlhof", // Each hotel gets its own table
   },
   {
     id: "6a4eafbc-97a7-31dd-9d02-d1bb9dc0b254",
-    name: "Reviews-Riedlberg", // Used for table naming
+    name: "Riedlberg", // Used for table naming
     partnerId: "1798",
-    tableId: "Reviews-Riedlberg", // Each hotel gets its own table
+    tableId: "Riedlberg", // Each hotel gets its own table
   },
-  // Add more hotels here in the same format
+  {
+    id: "faaad7bb-bd76-396c-af45-d00a661e4e53",
+    name: "Obermueller", // Used for table naming
+    partnerId: "1798",
+    tableId: "Obermueller", // Each hotel gets its own table
+  },
+
   // {
   //   id: 'another-hotel-id',
   //   name: 'HotelTwo',

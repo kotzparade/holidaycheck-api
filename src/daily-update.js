@@ -1,45 +1,69 @@
-import { config } from "./config/index.js";
 import { HotelReviewService } from "./services/HotelReviewService.js";
+import { ReviewAnalysisService } from "./services/ReviewAnalysisService.js";
+import { config } from "./config/index.js";
+import { hotels } from "./config/hotels.js";
+import axios from "axios";
 
-async function runDailyImport() {
-  console.log("Starting daily import for all hotels...");
-  const results = [];
+async function runDailyUpdate() {
+  const today = new Date();
+  const isFirstOfMonth = today.getDate() === 1;
 
-  for (const hotel of config.hotels) {
+  console.log(`Starting daily update - ${today.toISOString()}`);
+  console.log(`Is first of month: ${isFirstOfMonth}`);
+
+  for (const hotel of hotels) {
     try {
       console.log(`\nProcessing hotel: ${hotel.name}`);
-      const service = new HotelReviewService(config, hotel);
-      const newReviewsCount = await service.fetchNewReviews();
-      results.push({
-        hotel: hotel.name,
-        newReviews: newReviewsCount,
-        status: "success",
+
+      // Always run the review update
+      const reviewService = new HotelReviewService(config, hotel);
+
+      // First, get the current total from the API
+      const response = await axios.get(`${config.api.baseUrl}/hotelreview`, {
+        params: {
+          select: "id",
+          filter: `hotel.id:${hotel.id}`,
+          limit: 1,
+          offset: 0,
+          locale: config.api.defaultLocale,
+        },
+        headers: {
+          "Partner-ID": hotel.partnerId,
+        },
       });
+
+      // Update the total count
+      await reviewService.updateTotalCount(response.data.total);
+      console.log(
+        `[${hotel.name}] Updated total review count: ${response.data.total}`
+      );
+
+      // Then fetch any new reviews
+      const newReviewsCount = await reviewService.fetchNewReviews();
+      console.log(
+        `[${hotel.name}] Updated reviews: ${newReviewsCount} new reviews`
+      );
+
+      // Get the latest total count from ReviewTotals
+      const latestTotal = await reviewService.getLatestTotalCount();
+      console.log(`[${hotel.name}] Current total reviews: ${latestTotal}`);
+
+      // Only run analysis on the first day of each month
+      if (isFirstOfMonth) {
+        console.log(`[${hotel.name}] Running monthly analysis...`);
+        const analysisService = new ReviewAnalysisService(config, hotel);
+        await analysisService.analyzeRecentReviews(30); // Analyze last 30 days
+        console.log(`[${hotel.name}] Monthly analysis completed`);
+      } else {
+        console.log(`[${hotel.name}] Skipping analysis (not first of month)`);
+      }
     } catch (error) {
       console.error(`Error processing hotel ${hotel.name}:`, error);
-      results.push({
-        hotel: hotel.name,
-        newReviews: 0,
-        status: "error",
-        error: error.message,
-      });
     }
   }
 
-  // Print summary
-  console.log("\n=== Import Summary ===");
-  for (const result of results) {
-    const status = result.status === "success" ? "✓" : "✗";
-    const message =
-      result.status === "success"
-        ? `${result.newReviews} new reviews imported`
-        : `Failed: ${result.error}`;
-    console.log(`${status} ${result.hotel}: ${message}`);
-  }
+  console.log("\nDaily update completed");
 }
 
-// Run the import
-runDailyImport().catch((error) => {
-  console.error("Fatal error during import:", error);
-  process.exit(1);
-});
+// Run the update
+runDailyUpdate().catch(console.error);

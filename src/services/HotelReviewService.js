@@ -7,6 +7,7 @@ export class HotelReviewService {
     this.hotel = hotel;
     this.bigquery = new BigQuery({
       projectId: config.projectId,
+      keyFilename: config.keyFilename,
     });
   }
 
@@ -61,30 +62,29 @@ export class HotelReviewService {
 
   async updateTotalCount(totalReviews) {
     try {
-      // Instead of updating existing rows, we'll insert a new row with the total count
       const query = `
-        INSERT INTO \`${this.config.projectId}.${this.config.datasetId}.${
-        this.hotel.tableId
-      }\`
-        (review_id, title, general_text, entry_date, total_reviews)
+        INSERT INTO \`${this.config.projectId}.${this.config.datasetId}.ReviewTotals\`
+        (hotel_id, hotel_name, total_reviews, last_updated)
         VALUES
-        ('total_count_${Date.now()}', 'Total Reviews Count', '', CURRENT_TIMESTAMP(), @total_reviews)
+        (@hotelId, @hotelName, @totalReviews, CURRENT_TIMESTAMP())
       `;
 
       const options = {
         query,
         location: "US",
         params: {
-          total_reviews: totalReviews,
+          hotelId: this.hotel.id,
+          hotelName: this.hotel.name,
+          totalReviews: totalReviews,
         },
       };
 
       await this.bigquery.query(options);
       console.log(
-        `[${this.hotel.name}] Added total review count: ${totalReviews}`
+        `[${this.hotel.name}] Updated total review count: ${totalReviews}`
       );
     } catch (error) {
-      console.error(`[${this.hotel.name}] Error adding total count:`, error);
+      console.error(`[${this.hotel.name}] Error updating total count:`, error);
     }
   }
 
@@ -92,15 +92,16 @@ export class HotelReviewService {
     try {
       const query = `
         SELECT total_reviews
-        FROM \`${this.config.projectId}.${this.config.datasetId}.${this.hotel.tableId}\`
-        WHERE review_id LIKE 'total_count_%'
-        ORDER BY entry_date DESC
+        FROM \`${this.config.projectId}.${this.config.datasetId}.ReviewTotals\`
+        WHERE hotel_id = @hotelId
+        ORDER BY last_updated DESC
         LIMIT 1
       `;
 
       const [rows] = await this.bigquery.query({
         query,
         location: "US",
+        params: { hotelId: this.hotel.id },
       });
 
       return rows[0]?.total_reviews || null;
@@ -134,7 +135,6 @@ export class HotelReviewService {
         travel_reason: review.travelReason,
         traveled_with: review.traveledWith,
         children: this.parseChildren(review.children),
-        total_reviews: null, // This will be updated later
       }));
 
     if (!rows.length) {

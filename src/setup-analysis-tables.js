@@ -2,17 +2,16 @@ import { BigQuery } from "@google-cloud/bigquery";
 import { config } from "./config/index.js";
 import { hotels } from "./config/hotels.js";
 
-const reviewSchema = [
-  { name: "review_id", type: "STRING", mode: "REQUIRED" },
-  { name: "title", type: "STRING", mode: "REQUIRED" },
-  { name: "general_text", type: "STRING", mode: "REQUIRED" },
-  { name: "rating_general", type: "FLOAT64", mode: "NULLABLE" },
-  { name: "travel_date", type: "TIMESTAMP", mode: "REQUIRED" },
-  { name: "entry_date", type: "TIMESTAMP", mode: "REQUIRED" },
-  { name: "user_id", type: "STRING", mode: "REQUIRED" },
-  { name: "travel_reason", type: "STRING", mode: "NULLABLE" },
-  { name: "traveled_with", type: "STRING", mode: "NULLABLE" },
-  { name: "children", type: "INTEGER", mode: "REQUIRED" },
+const analysisSchema = [
+  { name: "analysis_date", type: "TIMESTAMP", mode: "REQUIRED" },
+  { name: "days_analyzed", type: "INTEGER", mode: "REQUIRED" },
+  { name: "overall_sentiment", type: "STRING", mode: "REQUIRED" },
+  { name: "positive_points", type: "STRING", mode: "REQUIRED" },
+  { name: "negative_points", type: "STRING", mode: "REQUIRED" },
+  { name: "common_themes", type: "STRING", mode: "REQUIRED" },
+  { name: "areas_for_improvement", type: "STRING", mode: "REQUIRED" },
+  { name: "total_reviews", type: "INTEGER", mode: "REQUIRED" },
+  { name: "analyzed_reviews", type: "INTEGER", mode: "REQUIRED" },
 ];
 
 const totalSchema = [
@@ -22,7 +21,7 @@ const totalSchema = [
   { name: "last_updated", type: "TIMESTAMP", mode: "REQUIRED" },
 ];
 
-async function setupBigQuery() {
+async function setupAnalysisTables() {
   const bigquery = new BigQuery({
     projectId: config.projectId,
     keyFilename: config.keyFilename,
@@ -46,24 +45,23 @@ async function setupBigQuery() {
 
     console.log("ReviewTotals table is ready");
 
-    // Create tables for each hotel
+    // Create analysis tables for each hotel
     for (const hotel of hotels) {
+      const tableId = `${hotel.tableId}_analysis`;
       const [table] = await bigquery
         .dataset(config.datasetId)
-        .createTable(hotel.tableId, { schema: reviewSchema })
-        .catch(() =>
-          bigquery.dataset(config.datasetId).table(hotel.tableId).get()
-        );
+        .createTable(tableId, { schema: analysisSchema })
+        .catch(() => bigquery.dataset(config.datasetId).table(tableId).get());
 
-      console.log(`Table for ${hotel.name} is ready`);
+      console.log(`Analysis table for ${hotel.name} is ready`);
     }
 
-    console.log("\nAll tables are ready!");
+    console.log("\nAll analysis tables are ready!");
   } catch (error) {
-    console.error("Error setting up BigQuery:", error);
+    console.error("Error setting up analysis tables:", error);
     throw error;
   }
 }
 
 // Run the setup
-setupBigQuery().catch(console.error);
+setupAnalysisTables().catch(console.error);
