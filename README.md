@@ -1,13 +1,15 @@
 # HolidayCheck API Integration
 
-This Node.js application fetches hotel reviews from the HolidayCheck API and stores them in Google BigQuery.
+This project integrates with the HolidayCheck API to fetch and analyze hotel reviews. It stores the data in BigQuery and provides analysis of the reviews using OpenAI's GPT models.
 
-## Prerequisites
+## Features
 
-1. Node.js 16 or higher
-2. Google Cloud Project with BigQuery enabled
-3. Google Cloud credentials set up
-4. HolidayCheck API Partner ID
+- Fetches hotel reviews from HolidayCheck API
+- Stores reviews in BigQuery
+- Analyzes reviews using OpenAI's GPT models
+- Provides daily updates of reviews and total counts
+- Monthly analysis of recent reviews
+- Manual analysis capability for specific hotels or time periods
 
 ## Setup
 
@@ -17,84 +19,122 @@ This Node.js application fetches hotel reviews from the HolidayCheck API and sto
 npm install
 ```
 
-2. Set up your environment variables by creating a `.env` file with the following variables:
+2. Create a `.env` file with your API keys:
 
+```env
+HOLIDAYCHECK_API_KEY=your_api_key
+OPENAI_API_KEY=your_openai_key
 ```
-PROJECT_ID=your-google-cloud-project-id
-DATASET_ID=HolidaycheckHotelReviews
-```
 
-3. Set up Google Cloud credentials by either:
-
-   - Setting the GOOGLE_APPLICATION_CREDENTIALS environment variable to point to your service account key file
-   - Or using Google Cloud SDK authentication (`gcloud auth application-default login`)
-
-4. Initialize the BigQuery dataset and tables:
+3. Set up BigQuery tables:
 
 ```bash
 npm run setup
 ```
 
-## Adding a New Hotel
-
-1. Open `src/config/hotels.js`
-2. Add a new hotel configuration to the `hotels` array:
-
-```javascript
-{
-  id: "your-hotel-id",              // HolidayCheck hotel ID
-  name: "YourHotelName",           // A unique name for the hotel (used for table naming)
-  partnerId: "your-partner-id",    // Your HolidayCheck partner ID
-  tableId: "Reviews_YourHotelName" // Table name in BigQuery (must be unique)
-}
-```
-
-Example:
-
-```javascript
-export const hotels = [
-  {
-    id: "291dac76-4fe2-3336-9c5d-709261abf797",
-    name: "HotelOne",
-    partnerId: "1798",
-    tableId: "Reviews_HotelOne",
-  },
-  {
-    id: "new-hotel-uuid",
-    name: "HotelTwo",
-    partnerId: "1798",
-    tableId: "Reviews_HotelTwo",
-  },
-];
-```
-
-3. After adding the hotel configuration, run the setup script to create the new table:
+4. Set up analysis tables:
 
 ```bash
-npm run setup
+npm run setup-analysis
 ```
 
 ## Usage
 
-To fetch reviews and store them in BigQuery:
+### Daily Updates
+
+Run daily updates to fetch new reviews and update total counts:
 
 ```bash
 npm run daily-update
 ```
 
-This will:
+### Review Analysis
 
-- Process each hotel independently
-- Create separate tables for each hotel if they don't exist
-- Fetch only new reviews that aren't already in the database
-- Provide a summary of the import process for each hotel
+The system performs review analysis in two ways:
 
-## Features
+1. **Automatic Monthly Analysis**
 
-- Fetches all reviews for configured hotels from HolidayCheck API
-- Handles pagination automatically
-- Implements rate limiting protection
-- Validates review data before insertion
-- Stores reviews in separate BigQuery tables per hotel
-- Error handling and logging
-- Daily import summary with success/failure status per hotel
+   - Runs on the first day of each month
+   - Analyzes reviews from the last 30 days
+   - Part of the daily update process
+   - Results are stored in hotel-specific analysis tables
+
+2. **Manual Analysis**
+   You can manually trigger analysis for:
+   - All hotels: `npm run analyze`
+   - Specific hotel: `npm run analyze "Hotel Name"`
+   - Custom time period: `npm run analyze "" 60` (60 days)
+   - Specific hotel and time: `npm run analyze "Hotel Name" 60`
+
+### Analysis Process
+
+The review analysis:
+
+1. Fetches recent reviews from BigQuery
+2. Processes reviews in batches of 10
+3. Uses OpenAI to analyze:
+   - Overall sentiment
+   - Positive points
+   - Negative points
+   - Common themes
+   - Areas for improvement
+4. Stores results in German language
+5. Formats results for easy reading in Looker Studio
+
+### Data Structure
+
+- Reviews are stored in hotel-specific tables
+- Total review counts are stored in the `ReviewTotals` table
+- Analysis results are stored in hotel-specific analysis tables
+
+## Configuration
+
+Edit `config/hotels.js` to add or modify hotels:
+
+```javascript
+export const hotels = [
+  {
+    id: "hotel-id",
+    name: "Hotel Name",
+    partnerId: "partner-id",
+  },
+];
+```
+
+## Maintenance
+
+### Cleanup
+
+To remove old total review rows:
+
+```bash
+npm run cleanup-totals
+```
+
+### Reset Analysis
+
+To delete all analysis results:
+
+```bash
+npm run delete-analysis
+```
+
+## Error Handling
+
+The system includes comprehensive error handling:
+
+- Retries failed API requests
+- Logs errors with detailed information
+- Continues processing other hotels if one fails
+- Validates OpenAI responses
+- Handles rate limits and timeouts
+
+## Logging
+
+All operations are logged with:
+
+- Timestamp
+- Hotel name
+- Operation type
+- Success/failure status
+- Error details when applicable

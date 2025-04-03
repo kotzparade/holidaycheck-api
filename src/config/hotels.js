@@ -17,6 +17,18 @@ export const hotels = [
     partnerId: "1798",
     tableId: "Obermueller", // Each hotel gets its own table
   },
+  {
+    id: "cb227542-f4e1-3431-963e-d6555dd926af",
+    name: "Bierhotel", // Used for table naming
+    partnerId: "1798",
+    tableId: "Bierhotel", // Each hotel gets its own table
+  },
+  {
+    id: "5baafa11-117b-3ae6-b8c1-122bf7c8b04b",
+    name: "Brunnerhof",
+    partnerId: "1798",
+    tableId: "Brunnerhof",
+  },
 
   // {
   //   id: 'another-hotel-id',

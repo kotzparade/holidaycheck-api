@@ -14,6 +14,12 @@ const analysisSchema = [
   { name: "analyzed_reviews", type: "INTEGER", mode: "REQUIRED" },
 ];
 
+// New schema for tracking analyzed review IDs
+const analyzedReviewIdsSchema = [
+  { name: "review_id", type: "STRING", mode: "REQUIRED" },
+  { name: "analysis_timestamp", type: "TIMESTAMP", mode: "REQUIRED" },
+];
+
 const totalSchema = [
   { name: "hotel_id", type: "STRING", mode: "REQUIRED" },
   { name: "hotel_name", type: "STRING", mode: "REQUIRED" },
@@ -55,6 +61,15 @@ async function setupAnalysisTables() {
 
       console.log(`Analysis table for ${hotel.name} is ready`);
     }
+
+    // Create AnalyzedReviewIDs table (if it doesn't exist)
+    const [analyzedIdsTable] = await bigquery
+      .dataset(config.datasetId)
+      .createTable("AnalyzedReviewIDs", { schema: analyzedReviewIdsSchema })
+      .catch(() =>
+        bigquery.dataset(config.datasetId).table("AnalyzedReviewIDs").get()
+      );
+    console.log("AnalyzedReviewIDs table is ready");
 
     console.log("\nAll analysis tables are ready!");
   } catch (error) {

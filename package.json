@@ -1,20 +1,20 @@
 {
   "name": "holidaycheck-api",
   "version": "1.0.0",
-  "description": "HolidayCheck API integration with BigQuery",
-  "main": "src/daily-update.js",
+  "description": "HolidayCheck API integration for hotel reviews",
+  "main": "src/index.js",
   "type": "module",
   "scripts": {
-    "start": "node src/index.js",
     "setup": "node src/setup.js",
     "setup-analysis": "node src/setup-analysis-tables.js",
-    "analyze": "node src/analyze.js",
     "daily-update": "node src/daily-update.js",
-    "migrate": "node src/migrate-data.js",
+    "analyze": "node src/analyze.js",
+    "analyze-reviews": "node src/analyze-reviews.js",
+    "cleanup-totals": "node src/cleanup-totals.js",
     "delete-analysis": "node src/delete-analysis.js"
   },
   "dependencies": {
-    "@google-cloud/bigquery": "^7.3.0",
+    "@google-cloud/bigquery": "^7.5.0",
     "axios": "^1.6.2",
     "dotenv": "^16.3.1",
     "openai": "^4.20.1"
