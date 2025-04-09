@@ -29,6 +29,24 @@ export const hotels = [
     partnerId: "1798",
     tableId: "Brunnerhof",
   },
+  {
+    id: "59bcddbc-2721-3961-a258-1e8c70140867",
+    name: "Jagdhof",
+    partnerId: "1798",
+    tableId: "Jagdhof",
+  },
+  {
+    id: "d73f9af8-e34a-386c-b3fb-8b463302c6d3",
+    name: "Waldeck",
+    partnerId: "1798",
+    tableId: "Waldeck",
+  },
+  {
+    id: "e870c59d-4507-3257-8b01-5dc487621b8e",
+    name: "Ulrichshof",
+    partnerId: "1798",
+    tableId: "Ulrichshof",
+  },
 
   // {
   //   id: 'another-hotel-id',
