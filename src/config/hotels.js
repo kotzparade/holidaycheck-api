@@ -47,6 +47,12 @@ export const hotels = [
     partnerId: "1798",
     tableId: "Ulrichshof",
   },
+  {
+    id: "0cd6611c-2e89-34f5-b0e1-2ac5a32ebd4f",
+    name: "Randsbergerhof",
+    partnerId: "1798",
+    tableId: "Randsbergerhof",
+  },
 
   // {
   //   id: 'another-hotel-id',
